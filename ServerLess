@@ -1,0 +1,67 @@
+function doPost(e) {
+  var update = JSON.parse(e.postData.contents);
+  var message = update.message;
+
+  if (message.text != 'фото' && message.text != 'Фото') {
+    if (message.text.toLowerCase() === '/start') {
+      sendStartMessage(message.chat.id, message.from.first_name);
+    } else if (message.text.toLowerCase() === 'привет') {
+      var response = 'Привет, ' + message.from.first_name;
+      sendMessageAndWriteToSheet(message.chat.id, message.from.first_name, message.text, response);
+    } else {
+      var response = 'Как насчет свергнуть императора и захватить империю?';
+      sendMessageAndWriteToSheet(message.chat.id, message.from.first_name, message.text, response);
+    }
+  } else if (message.text == 'фото' || message.text == 'Фото') {
+    sendPhoto(message.chat.id, 'https://sun9-78.userapi.com/impg/NUYeioy7EnOVh_IUdenJsuxbLhKKMSZksnAEEQ/pLk6vHdkJ3c.jpg?size=807x460&quality=95&sign=24c55fe7dcc1c7545f8df6040f8230a2&c_uniq_tag=k0QejJ2EMENe9jYVdDP__Sd5vcGtazqii8lpPisuRro&type=album');
+  }
+}
+
+function sendMessageAndWriteToSheet(chatId, userName, userMessage, text) {
+  sendMessage(chatId, text);
+  writeToSheet(userName, userMessage, text);
+}
+
+function writeToSheet(userName, userMessage, botMessage) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var row = [new Date(), userName, userMessage, botMessage];
+  sheet.appendRow(row);
+}
+
+function sendPhoto(chatId, photoUrl) {
+  var token = 'Токен';
+  var apiUrl = 'https://api.telegram.org/bot' + token + '/sendPhoto';
+
+  var payloads = {
+    method: 'post',
+    contentType: 'application/json',
+    payload: JSON.stringify({
+      chat_id: chatId,
+      photo: photoUrl,
+    }),
+  };
+  UrlFetchApp.fetch(apiUrl, payloads);
+}
+
+function sendMessage(chatId, text) {
+  var token = 'Токен';
+  var apiUrl = 'https://api.telegram.org/bot' + token + '/sendMessage';
+
+  var payloads = {
+    method: 'post',
+    contentType: "application/json",
+    payload: JSON.stringify({
+      chat_id: chatId,
+      text: text,
+    }),
+  };
+
+  UrlFetchApp.fetch(apiUrl, payloads);
+  return ContentService.createTextOutput(JSON.stringify({ 'content': 'Message received' })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function sendStartMessage(chatId, firstName) {
+  var startMessage = 'Здравствуйте ' + firstName + ', Список команд: фото';
+
+  sendMessage(chatId, startMessage);
+}
