@@ -1,0 +1,327 @@
+function doPost(e) {
+  try {
+    Logger.log('Received POST request');
+    var data = JSON.parse(e.postData.contents);
+    Logger.log('Received data:', data);
+    var callbackQuery = data.callback_query;
+
+    if (callbackQuery) {
+      if(callbackQuery.data == "request_phone"){
+      onRequestPhone(callbackQuery);
+     }
+      else if(callbackQuery.data == "request_location"){
+      onReceiveLocation(callbackQuery);
+      }
+    } else if (data.message && data.message.text === '/start') {
+      startBotForUser(data.message);
+    } else if (data.message && data.message.contact) {
+      ContactWriter(data.message);
+      DeleteKeyboard(data.message.chat.id);
+      requestLocation(data);
+    } else if (data.message && data.message.location) {
+      LocationWriter(data.message);
+      DeleteKeyboard(data.message.chat.id);
+    } else if (data.message && data.message.text === '/pochta') {
+      requestEmail(data.message);
+    } else if (data.message && data.message.text.startsWith('/pochta')) {
+      var email = data.message.text.replace('').trim();
+      EmailWriter(data.message.from.first_name, email);
+      sendText(data.message.chat.id,"Ваша почта записана.");
+    }
+  } catch (error) {
+    Logger.log('Error in doPost:', error);
+
+    // Добавьте следующий блок кода для обработки ошибок при вводе электронного адреса
+    if (data.message && data.message.text && data.message.text.startsWith('/pochta')) {
+      var email = data.message.text.replace('/pochta', '').trim();
+      Logger.log('Error handling email:', error, 'Email:', email);
+      
+    }
+  }
+}
+
+
+function EmailWriter(name,email) {
+  if (!isValidEmail(email)) {
+    Logger.log('Invalid email:', email);
+    
+    return;
+  }
+  let sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Messages");
+
+    let data = sheet.getRange('B:B').getValues();
+    for(let i = 0;i < data.length;i++){
+      for(let j = 0;j < data[i].length;j++){
+        if(data[i][j] == name){
+          sheet.getRange(`F${i + 1}`).setValue(`(${email})`)
+          return;
+        }
+      }
+    }
+}
+
+function requestEmail(message) {
+  var token = '7160938324:AAE-6M2N5iZW6dqHS6iEHSPXZujozhRjJ1Y';
+  var telegramAPI = 'https://api.telegram.org/bot' + token + '/sendMessage';
+
+  var requestText = 'Пожалуйста, введите свой электронный адрес:';
+  var payload = {
+    chat_id: message.chat.id,
+    text: requestText,
+    reply_markup: JSON.stringify({
+      force_reply: true
+    })
+  };
+
+  try {
+    var response = UrlFetchApp.fetchAll([{
+      url: telegramAPI,
+      method: 'post',
+      contentType: 'application/json',
+      payload: JSON.stringify(payload),
+      muteHttpExceptions: true
+    }]);
+    
+    Logger.log(response);
+  } catch (error) {
+    Logger.log('Error in requestEmail:', error);
+    
+  }
+}
+
+function sendText(chatid,text){
+var token = '7160938324:AAE-6M2N5iZW6dqHS6iEHSPXZujozhRjJ1Y';
+var telegramAPI = 'https://api.telegram.org/bot' + token + '/sendMessage';
+
+  UrlFetchApp.fetch(telegramAPI,{
+    "method": "post",
+    "contentType": "application/json",
+    "payload": JSON.stringify({
+      "chat_id":chatid,
+      "text": text
+    })
+  });
+
+}
+
+
+function IsEmailExists(email) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Messages");
+
+  var data = sheet.getRange('D:D').getValues();
+  for (var i = 0; i < data.length; i++) {
+    for (var j = 0; j < data[i].length; j++) {
+      if (data[i][j] == email) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+function isValidEmail(email) {
+  
+  var emailRegex = /\S+@\S+\.\S+/;
+  return emailRegex.test(email);
+}
+
+function LocationWriter(obj){
+    let sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Messages");
+
+    let data = sheet.getRange('B:B').getValues();
+    for(let i = 0;i < data.length;i++){
+      for(let j = 0;j < data[i].length;j++){
+        if(data[i][j] == obj.from.first_name){
+          sheet.getRange(`E${i + 1}`).setValue(`(${obj.location.latitude}.,${obj.location.longitude})`)
+          return;
+        }
+      }
+    }
+}
+
+function ContactWriter(data){
+
+  if(IsUserExists(data.from.first_name))
+    return;
+
+  let sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Messages");
+
+  let availableRow = sheet.getLastRow() + 1;
+
+  sheet.getRange(`A${availableRow}:D${availableRow}`).setValues([
+    [data.from.id,data.from.first_name,data.contact.phone_number,new Date()]
+  ]);
+}
+
+function IsUserExists(username){
+  let sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Messages");
+
+    let data = sheet.getRange('B:B').getValues();
+    for(let i = 0;i < data.length;i++){
+      for(let j = 0;j < data[i].length;j++){
+        if(data[i][j] == username){
+          return true;
+        }
+      }
+    }
+
+  return false;
+}
+
+function startBotForUser(message) {
+  var token = '7160938324:AAE-6M2N5iZW6dqHS6iEHSPXZujozhRjJ1Y';
+
+  try {
+    sendWelcomeMessage(message.chat.id)
+
+    Logger.log(response);
+  } 
+  catch (error) {
+    Logger.log('Error:', error);
+  }
+}
+
+function onRequestPhone(e) {
+  var token = '7160938324:AAE-6M2N5iZW6dqHS6iEHSPXZujozhRjJ1Y';
+  var telegramAPI = 'https://api.telegram.org/bot' + token + '/sendMessage';
+
+  var message = 'Необходимо разрешение на эту операцию';
+
+  var payload = {
+    chat_id: e.message.chat.id,
+    text: message,
+    reply_markup: JSON.stringify({
+      keyboard: [
+        [{ text: 'Разрешить', request_contact: true }]
+      ],
+      resize_keyboard: true,
+      one_time_keyboard: true
+    })
+  };
+
+  try {
+    var response = UrlFetchApp.fetchAll([{
+      url: telegramAPI,
+      method: 'post',
+      contentType: 'application/json',
+      payload: JSON.stringify(payload),
+      muteHttpExceptions: true
+    }]);
+
+    removeInlineKeyboard(e.message.chat.id,e.message.message_id);
+    Logger.log(response);
+  } 
+  catch (error) {
+    Logger.log('Error:', error);
+  }
+}
+
+function onReceiveLocation(e) {
+  var token = '7160938324:AAE-6M2N5iZW6dqHS6iEHSPXZujozhRjJ1Y';
+  var telegramAPI = 'https://api.telegram.org/bot' + token + '/sendMessage';
+
+
+  var message = 'Отправьте свою геолокацию';
+
+  var payload = {
+    chat_id: e.message.chat.id,
+    text: message,
+    reply_markup: JSON.stringify({
+      keyboard: [
+        [{ text: 'Передать свою геолокацию', request_location: true }]
+      ],
+      resize_keyboard: true,
+      one_time_keyboard: true
+    })
+  };
+
+  try {
+    var response = UrlFetchApp.fetchAll([{
+      url: telegramAPI,
+      method: 'post',
+      contentType: 'application/json',
+      payload: JSON.stringify(payload),
+      muteHttpExceptions: true
+    }]);
+
+    removeInlineKeyboard(e.message.chat.id, e.message.message_id);
+
+    Logger.log(response);
+  } 
+  catch (error) {
+    Logger.log('Error:', error);
+  }
+}
+
+function requestLocation(e){
+  var token = '7160938324:AAE-6M2N5iZW6dqHS6iEHSPXZujozhRjJ1Y';
+  var telegramAPI = 'https://api.telegram.org/bot' + token + '/';
+
+  var keyboard = {
+    inline_keyboard: [[{ text: 'Отправить геолокацию', callback_data: 'request_location' }]]
+  };
+
+  UrlFetchApp.fetch(telegramAPI + "sendMessage", {
+    method: "post",
+    contentType: "application/json",
+    payload: JSON.stringify({
+      chat_id: e.message.chat.id,
+      text: "Отправьте свою геолокацию",
+      reply_markup:  JSON.stringify(keyboard)
+    })});
+}
+
+function DeleteKeyboard(chat_id) {
+  var token = '7160938324:AAE-6M2N5iZW6dqHS6iEHSPXZujozhRjJ1Y';
+  var telegramAPI = 'https://api.telegram.org/bot' + token + '/';
+
+   UrlFetchApp.fetch(telegramAPI + "sendMessage", {
+    "method": "post",
+    "contentType": "application/json",
+    "payload": JSON.stringify({
+      "chat_id": chat_id,
+      "text": "Принимаем ваши данные",
+      "reply_markup": {
+        "remove_keyboard": true
+      }
+    })
+  });
+}
+
+function removeInlineKeyboard(chatId, messageId) {
+  var token = '7160938324:AAE-6M2N5iZW6dqHS6iEHSPXZujozhRjJ1Y';
+  var telegramAPI = 'https://api.telegram.org/bot' + token + '/';
+  UrlFetchApp.fetch(telegramAPI + "editMessageReplyMarkup", {
+    method: "post",
+    contentType: "application/json",
+    payload: JSON.stringify({
+      chat_id: chatId,
+      message_id: messageId,
+      reply_markup: JSON.stringify({})
+    })
+  });
+}
+
+function sendWelcomeMessage(chatId) {
+  var photoUrl = "https://animestars.org/uploads/posts/2017-03/1490311850_snimok4.jpg"; 
+  var caption = "Добро пожаловать в службу доставки, заполните нашу форму, это необходимо и абсолютно бесплатно";
+  var token = '7160938324:AAE-6M2N5iZW6dqHS6iEHSPXZujozhRjJ1Y';
+  var telegramAPI = 'https://api.telegram.org/bot' + token + '/';
+  var keyboard = {
+    inline_keyboard: [[{ text: 'Отправить номер телефона', callback_data: 'request_phone' }]]
+  };
+
+  var payload = {
+    method: "post",
+    contentType: "application/json",
+    payload: JSON.stringify({
+      chat_id: chatId,
+      photo: photoUrl,
+      caption: caption,
+      reply_markup:  JSON.stringify(keyboard)
+    })
+  };
+
+  UrlFetchApp.fetch(telegramAPI + "sendPhoto", payload);
+}
