@@ -28,7 +28,7 @@ function doPost(e) {
 }
 
 function startBotForUser(message) {
-  var token = '7160938324:AAE-6M2N5iZW6dqHS6iEHSPXZujozhRjJ1Y';
+  var token = '';
   var telegramAPI = 'https://api.telegram.org/bot' + token + '/sendMessage';
 
   var keyboard = {
@@ -47,7 +47,7 @@ function startBotForUser(message) {
 }
 
 function onRequestPhone(e) {
-  var token = '7160938324:AAE-6M2N5iZW6dqHS6iEHSPXZujozhRjJ1Y';
+  var token = '';
   var telegramAPI = 'https://api.telegram.org/bot' + token + '/sendMessage';
 
   var message = 'Необходимо разрешение на эту операцию';
@@ -98,7 +98,7 @@ function onReceiveContact(contact) {
 
 function DeleteKeyboard(chat_id) {
 
-  var token = '7160938324:AAE-6M2N5iZW6dqHS6iEHSPXZujozhRjJ1Y';
+  var token = '';
   var telegramAPI = 'https://api.telegram.org/bot' + token + '/';
 
   return UrlFetchApp.fetch(telegramAPI + "sendMessage", {
@@ -115,7 +115,7 @@ function DeleteKeyboard(chat_id) {
 }
 
 function removeInlineKeyboard(chatId,messageId) {
-var token = '7160938324:AAE-6M2N5iZW6dqHS6iEHSPXZujozhRjJ1Y';
+var token = '';
   var telegramAPI = 'https://api.telegram.org/bot' + token + '/';
 
 
@@ -133,7 +133,7 @@ var token = '7160938324:AAE-6M2N5iZW6dqHS6iEHSPXZujozhRjJ1Y';
 function sendWelcomeMessage(chatId) {
   var photoUrl = "https://zenmarket.blob.core.windows.net/images/blog/gq0hpidu.r4t"; 
   var caption = "Добро пожаловать^^ для того чтоб вам позвонили кошко-девочки, вам нужно предоставить нам номерочек";
-  var token = '7160938324:AAE-6M2N5iZW6dqHS6iEHSPXZujozhRjJ1Y';
+  var token = '';
   var telegramAPI = 'https://api.telegram.org/bot' + token + '/';
  var keyboard = {
     inline_keyboard: [[{ text: 'Отправить номер телефона', callback_data: 'request_phone' }]]
