@@ -1,0 +1,94 @@
+var TELEGRAM_BOT_TOKEN = '6826832457:AAEpwBm0ow1XDVk5RqDNKPx5yN4EkIs0We0';
+var OPENAI_API_KEY = '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';
+
+function sendMessage(chatId, text) {
+  try {
+    var url = 'https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage';
+    var maxMessageLength = 4000;
+    while (text.length > 0) {
+      var messagePart = text.substring(0, maxMessageLength);
+      text = text.substring(maxMessageLength);
+      var payload = {
+        'chat_id': chatId,
+        'text': messagePart
+      };
+      UrlFetchApp.fetch(url, {
+        'method': 'post',
+        'contentType': 'application/json',
+        'payload': JSON.stringify(payload)
+      });
+    }
+  } catch (error) {
+    console.error('Ошибка', error);
+  }
+}
+
+function callOpenAI(text, chatId, username) {
+  try {
+    var apiUrl = 'https://api.openai.com/v1/chat/completions';
+    var headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + OPENAI_API_KEY
+    };
+    var data = {
+      'messages': [
+        {
+          'role': 'user',
+          'content': text
+        }
+      ],
+      'max_tokens': 4000, 
+      'model': 'gpt-3.5-turbo'
+    };
+    var options = {
+      'method': 'post',
+      'headers': headers,
+      'payload': JSON.stringify(data)
+    };
+    var response = UrlFetchApp.fetch(apiUrl, options);
+    var responseData = JSON.parse(response.getContentText());
+    if (responseData && responseData.choices && responseData.choices[0] && responseData.choices[0].message && responseData.choices[0].message.content) {
+      var botResponse = responseData.choices[0].message.content.trim();
+      sendMessage(chatId, botResponse);
+      writeToSpreadsheet(username, text, botResponse); // Таблица
+    } else {
+      throw new Error('Не торопись');
+    }
+  } catch (error) {
+    console.error('OpenAI тупит:', error);
+    sendMessage(chatId, 'у ИИ ломка.');
+  }
+}
+
+function writeToSpreadsheet(username, userMessage, botResponse) {
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var timestamp = new Date();
+    sheet.appendRow([timestamp, username, userMessage, botResponse]);
+  } catch (error) {
+    console.error('Таблица лагает:', error);
+  }
+}
+
+function handleUserMessage(message) {
+  try {
+    var text = message.text + '.';
+    var chatId = message.chat.id;
+    var username = message.from.username;
+
+    callOpenAI(text, chatId, username);
+  } catch (error) {
+    console.error('Ошибка:', error);
+  }
+}
+
+function doPost(e) {
+  try {
+    var data = JSON.parse(e.postData.contents);
+    if (data.message) {
+      handleUserMessage(data.message);
+    }
+  } catch (error) {
+    console.error('Ошибка POST:', error);
+  }
+}
