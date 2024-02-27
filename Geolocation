@@ -30,8 +30,6 @@ function doPost(e) {
     }
   } catch (error) {
     Logger.log('Error in doPost:', error);
-
-    // Добавьте следующий блок кода для обработки ошибок при вводе электронного адреса
     if (data.message && data.message.text && data.message.text.startsWith('/pochta')) {
       var email = data.message.text.replace('/pochta', '').trim();
       Logger.log('Error handling email:', error, 'Email:', email);
@@ -61,7 +59,7 @@ function EmailWriter(name,email) {
 }
 
 function requestEmail(message) {
-  var token = '7160938324:AAE-6M2N5iZW6dqHS6iEHSPXZujozhRjJ1Y';
+  var token = '';
   var telegramAPI = 'https://api.telegram.org/bot' + token + '/sendMessage';
 
   var requestText = 'Пожалуйста, введите свой электронный адрес:';
@@ -90,7 +88,7 @@ function requestEmail(message) {
 }
 
 function sendText(chatid,text){
-var token = '7160938324:AAE-6M2N5iZW6dqHS6iEHSPXZujozhRjJ1Y';
+var token = '';
 var telegramAPI = 'https://api.telegram.org/bot' + token + '/sendMessage';
 
   UrlFetchApp.fetch(telegramAPI,{
@@ -170,7 +168,7 @@ function IsUserExists(username){
 }
 
 function startBotForUser(message) {
-  var token = '7160938324:AAE-6M2N5iZW6dqHS6iEHSPXZujozhRjJ1Y';
+  var token = '';
 
   try {
     sendWelcomeMessage(message.chat.id)
@@ -183,7 +181,7 @@ function startBotForUser(message) {
 }
 
 function onRequestPhone(e) {
-  var token = '7160938324:AAE-6M2N5iZW6dqHS6iEHSPXZujozhRjJ1Y';
+  var token = '';
   var telegramAPI = 'https://api.telegram.org/bot' + token + '/sendMessage';
 
   var message = 'Необходимо разрешение на эту операцию';
@@ -255,7 +253,7 @@ function onReceiveLocation(e) {
 }
 
 function requestLocation(e){
-  var token = '7160938324:AAE-6M2N5iZW6dqHS6iEHSPXZujozhRjJ1Y';
+  var token = '';
   var telegramAPI = 'https://api.telegram.org/bot' + token + '/';
 
   var keyboard = {
@@ -273,7 +271,7 @@ function requestLocation(e){
 }
 
 function DeleteKeyboard(chat_id) {
-  var token = '7160938324:AAE-6M2N5iZW6dqHS6iEHSPXZujozhRjJ1Y';
+  var token = '';
   var telegramAPI = 'https://api.telegram.org/bot' + token + '/';
 
    UrlFetchApp.fetch(telegramAPI + "sendMessage", {
@@ -290,7 +288,7 @@ function DeleteKeyboard(chat_id) {
 }
 
 function removeInlineKeyboard(chatId, messageId) {
-  var token = '7160938324:AAE-6M2N5iZW6dqHS6iEHSPXZujozhRjJ1Y';
+  var token = '';
   var telegramAPI = 'https://api.telegram.org/bot' + token + '/';
   UrlFetchApp.fetch(telegramAPI + "editMessageReplyMarkup", {
     method: "post",
@@ -306,7 +304,7 @@ function removeInlineKeyboard(chatId, messageId) {
 function sendWelcomeMessage(chatId) {
   var photoUrl = "https://animestars.org/uploads/posts/2017-03/1490311850_snimok4.jpg"; 
   var caption = "Добро пожаловать в службу доставки, заполните нашу форму, это необходимо и абсолютно бесплатно";
-  var token = '7160938324:AAE-6M2N5iZW6dqHS6iEHSPXZujozhRjJ1Y';
+  var token = '';
   var telegramAPI = 'https://api.telegram.org/bot' + token + '/';
   var keyboard = {
     inline_keyboard: [[{ text: 'Отправить номер телефона', callback_data: 'request_phone' }]]
