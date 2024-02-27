@@ -1,5 +1,5 @@
-var TELEGRAM_BOT_TOKEN = '6826832457:AAEpwBm0ow1XDVk5RqDNKPx5yN4EkIs0We0';
-var OPENAI_API_KEY = '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';
+var TELEGRAM_BOT_TOKEN = 'Токен';
+var OPENAI_API_KEY = 'Ключ';
 
 function sendMessage(chatId, text) {
   try {
